@@ -16,12 +16,21 @@ def job():
         if not video_path:
             logger.info("📭 Нет новых видео")
             return
-        processed_path, title, description = process_video(video_path, video_name)
-        upload_to_youtube(creds, processed_path, title, description)
-        logger.info(f"✅ Опубликовано: {title}")
-        for p in [processed_path, video_path]:
-            if os.path.exists(p):
-                os.remove(p)
+
+        segments = process_video(video_path, video_name)
+        logger.info(f"🎬 Нарезано {len(segments)} сегментов")
+
+        for i, (processed_path, title, description) in enumerate(segments):
+            logger.info(f"📤 Публикуем {i+1}/{len(segments)}: {title}")
+            upload_to_youtube(creds, processed_path, title, description)
+            if os.path.exists(processed_path):
+                os.remove(processed_path)
+
+        if os.path.exists(video_path):
+            os.remove(video_path)
+
+        logger.info("✅ Все сегменты опубликованы!")
+
     except Exception as e:
         logger.error(f"❌ Ошибка: {e}")
 
